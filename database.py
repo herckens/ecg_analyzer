@@ -1,9 +1,9 @@
 import numpy
 
 class DataBase:
-    def __init__(self):
-        self.prefix = "../ptbdb/"
-        self.patientPath = "patient001/s0014lre"
+    def __init__(self, prefix, patientPath):
+        self.prefix = prefix
+        self.patientPath = patientPath
 
     def get_data(self):
         """
