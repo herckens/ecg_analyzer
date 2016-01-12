@@ -12,21 +12,15 @@ prefix = "../ptbdb/"
 #patientPath = "patient001/s0014lre"
 patientPath = "patient001/s0010_re"
 db = DataBase(prefix, patientPath)
-data = db.get_data()
-
-# Extract the ECG lead 1.
-lead1_raw = data[0,:]
+lead1_raw = db.get_data(lead = 0)
 
 dc = DataConditioner()
-
 # Remove baseline drift.
 lead1_driftless = dc.remove_drift(lead1_raw)
-
 # Smooth the data.
 Wn = 0.08
 b, a = signal.butter(6, Wn, 'lowpass', analog=False)
 lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
-
 # Find location and value of R peaks.
 rPeaksInd, rPeaksVal = dc.find_r_peaks(lead1_smoothed)
 
