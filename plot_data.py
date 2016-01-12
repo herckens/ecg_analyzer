@@ -1,31 +1,39 @@
-import numpy
-from matplotlib import pylab as pl
+import numpy as np
+#from matplotlib import pylab as pl
+from matplotlib import pyplot as plt
 from scipy import signal
 
-import database
+from database import DataBase
+from dataconditioner import DataConditioner
 
-def remove_drift(inputData):
-    """
-    Remove baseline drift from inputData.
-    """
-    Wn = 0.001
-    b, a = signal.butter(3, Wn, 'lowpass', analog=False)
-    baseline = signal.filtfilt(b, a, inputData)
-    outputData = inputData - baseline
-    return outputData
 
 # Get data from DB file.
 prefix = "../ptbdb/"
 #patientPath = "patient001/s0014lre"
 patientPath = "patient001/s0010_re"
-db = database.DataBase(prefix, patientPath)
+db = DataBase(prefix, patientPath)
 data = db.get_data()
 
+# Extract the ECG lead 1.
 lead1_raw = data[0,:]
-lead1_driftless = remove_drift(lead1_raw)
+
+dc = DataConditioner()
+
+# Remove baseline drift.
+lead1_driftless = dc.remove_drift(lead1_raw)
+
+# Smooth the data.
+Wn = 0.08
+b, a = signal.butter(6, Wn, 'lowpass', analog=False)
+lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
+
+# Find location and value of R peaks.
+rPeaksInd, rPeaksVal = dc.find_r_peaks(lead1_smoothed)
 
 # Plot
-pl.close()
-pl.ion()
-pl.plot(lead1_driftless)
-pl.show()
+plt.close()
+plt.ion()
+#plt.plot(lead1_driftless)
+plt.plot(lead1_smoothed)
+plt.scatter(rPeaksInd, rPeaksVal)
+plt.show()

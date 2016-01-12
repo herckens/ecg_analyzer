@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 
 class DataBase:
     def __init__(self, prefix, patientPath):
@@ -24,7 +24,7 @@ class DataBase:
         signalLength = int(headerFile.readline().split()[3])
 
         # Loop over all 12 measurements from dat file
-        data = numpy.zeros((12,signalLength))
+        data = np.zeros((12,signalLength))
         for sampleIdx in range(signalLength):
             # Read 12 signal from dat file
             for varIdx in range(12):
