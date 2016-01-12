@@ -28,16 +28,12 @@ class DataConditioner:
         Return 70% of the average of these peaks.
         """
         highestPeaks = list()
-        #highestPeaks = [(0,0)]
         for index in peakInd:
             if len(highestPeaks) < 5:
                 highestPeaks.append(data[index])
                 next
             for peak in highestPeaks:
-                #print('data = ' + str(data[index]))
-                #print('peak[1] = ' + str(peak[1]))
                 if data[index] > peak:
-                    #print('bigger found')
                     highestPeaks[highestPeaks.index(peak)] = data[index]
                     break
         arr = np.array(highestPeaks)
@@ -77,7 +73,9 @@ class DataConditioner:
 
     def cut_data_into_beats(self, data, rPeaksInd):
         """
-        Without first and last.
+        Cut the signal into single heart beats, centered around the R peak.
+        Return a list of signal slices.
+        The first and last R peak in the signal are discarded.
         """
         beatPeriod = self.calc_avg_time_between_beats(rPeaksInd)
         slices = list()
