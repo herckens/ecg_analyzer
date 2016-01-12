@@ -74,3 +74,15 @@ class DataConditioner:
             periods.append(rPeaksInd[i+1] - rPeaksInd[i])
         periods = np.array(periods)
         return periods.mean()
+
+    def cut_data_into_beats(self, data, rPeaksInd):
+        """
+        Without first and last.
+        """
+        beatPeriod = self.calc_avg_time_between_beats(rPeaksInd)
+        slices = list()
+        for peak in rPeaksInd[1:-1]:
+            start = peak - int(beatPeriod / 2)
+            end = peak + int(beatPeriod / 2)
+            slices.append(data[start:end])
+        return slices

@@ -24,12 +24,15 @@ lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
 # Find location and value of R peaks.
 rPeaksInd, rPeaksVal = dc.find_r_peaks(lead1_smoothed)
 # Calculate the average time between R peaks.
-beatPeriod = dc.calc_avg_time_between_beats(rPeaksInd)
+#beatPeriod = dc.calc_avg_time_between_beats(rPeaksInd)
+slices = dc.cut_data_into_beats(lead1_smoothed, rPeaksInd)
 
 # Plot
 plt.close()
 plt.ion()
 #plt.plot(lead1_driftless)
-plt.plot(lead1_smoothed)
-plt.scatter(rPeaksInd, rPeaksVal)
+#plt.plot(lead1_smoothed)
+#plt.scatter(rPeaksInd, rPeaksVal)
+for sample in slices:
+    plt.plot(sample)
 plt.show()
