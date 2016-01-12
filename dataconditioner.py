@@ -64,3 +64,13 @@ class DataConditioner:
         rPeaksInd = self.remove_small_peaks(peakInd, data, threshold)
         rPeaksVal = data[rPeaksInd]
         return rPeaksInd, rPeaksVal
+
+    def calc_avg_time_between_beats(self, rPeaksInd):
+        """
+        Calculate the average time between two consecutive peaks in rPeaksInd..
+        """
+        periods = list()
+        for i in range(0,len(rPeaksInd)-1):
+            periods.append(rPeaksInd[i+1] - rPeaksInd[i])
+        periods = np.array(periods)
+        return periods.mean()
