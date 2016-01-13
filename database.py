@@ -1,4 +1,5 @@
 import numpy as np
+import linecache
 
 class DataBase:
     """
@@ -24,7 +25,7 @@ class DataBase:
         # Retrieve signal length
         signalLength = int(headerFile.readline().split()[3])
 
-        if not lead == None:
+        if lead is not None:
             # Extract measurement number lead from dat file
             data = np.zeros((signalLength))
             for sampleIdx in range(signalLength):
@@ -51,3 +52,15 @@ class DataBase:
 
         return data
 
+    def has_myocardial_infarction(self):
+        """
+        Returns true, if this patient is diagnosed with myocardial infarction.
+        Returns false, in all other cases.
+        """
+        line = linecache.getline(self.prefix + self.patientPath + ".hea", 23)
+        diagnosis = line.split()[4:]
+        print(diagnosis)
+        if diagnosis == ['Myocardial', 'infarction']:
+            return True
+        else :
+            return False

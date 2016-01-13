@@ -23,9 +23,11 @@ b, a = signal.butter(6, Wn, 'lowpass', analog=False)
 lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
 # Find location and value of R peaks.
 rPeaksInd, rPeaksVal = dc.find_r_peaks(lead1_smoothed)
-# Calculate the average time between R peaks.
-#beatPeriod = dc.calc_avg_time_between_beats(rPeaksInd)
+# Cut the signal into individual heart beats centered around R peaks.
 slices = dc.cut_data_into_beats(lead1_smoothed, rPeaksInd)
+# Get diagnosis (pathologic or not).
+isPathologic = db.has_myocardial_infarction()
+print(isPathologic)
 
 # Plot
 plt.close()
