@@ -12,15 +12,21 @@ class DataBase:
     __copyright__ = "Copyright 2015, ThePolyscope.com"
     __license__ =   "MIT License"
 
-    def __init__(self, prefix, patientPath):
+    def __init__(self, prefix):
         self.prefix = prefix
-        self.patientPath = patientPath
 
-    def get_data(self, lead = None):
+    def get_data(self, patientPath, lead = None):
+        """
+        Read the raw ECG signal from the binary file.
+        If lead is None:
+            Return a numpy.array containing all 12 arrays with the signals.
+        If lead is an integer between 0 and 11
+            Return one numpy.array with the signal of specified lead.
+        """
         # Open header file in read mode
-        headerFile = open(self.prefix + self.patientPath + ".hea","r")
+        headerFile = open(self.prefix + patientPath + ".hea","r")
         # Open binary file in read mode
-        datFile = open(self.prefix + self.patientPath + ".dat","rb")
+        datFile = open(self.prefix + patientPath + ".dat","rb")
 
         # Retrieve signal length
         signalLength = int(headerFile.readline().split()[3])
@@ -52,15 +58,21 @@ class DataBase:
 
         return data
 
-    def has_myocardial_infarction(self):
+    def get_diagnosis(self, patientPath):
+        """
+        Get the patient's diagnosis from the header file.
+        """
+        line = linecache.getline(self.prefix + patientPath + ".hea", 23)
+        diagnosis = ' '.join(line.split()[4:])
+        return diagnosis
+
+    def has_myocardial_infarction(self, patientPath):
         """
         Returns true, if this patient is diagnosed with myocardial infarction.
         Returns false, in all other cases.
         """
-        line = linecache.getline(self.prefix + self.patientPath + ".hea", 23)
-        diagnosis = line.split()[4:]
-        print(diagnosis)
-        if diagnosis == ['Myocardial', 'infarction']:
+        diagnosis = self.get_diagnosis(patientPath)
+        if diagnosis == 'Myocardial infarction':
             return True
         else :
             return False

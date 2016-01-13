@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import signal
+from scipy import signal, ndimage
 
 class DataConditioner:
     def __init__(self):
@@ -84,3 +84,44 @@ class DataConditioner:
             end = peak + int(beatPeriod / 2)
             slices.append(data[start:end])
         return slices
+
+    def zoom_to_length(self, data, length):
+        """
+        Zoom all 1D arrays in the list data so that their length equals length.
+        """
+        dataOut = list()
+        for arr in data:
+            zoomFactor = length / len(arr)
+            new = ndimage.zoom(arr, zoomFactor, order=1)
+            dataOut.append(new)
+        return dataOut
+    
+    def scale_to_int(self, data, resolution):
+        dataOut = list()
+        for arr in data:
+            scaled = arr * resolution
+            rounded = np.rint(scaled)
+            dataOut.append(rounded.astype(int))
+        return dataOut
+
+
+    def condition_signal(self, data):
+        """
+        Condition a continuous ECG lead I signal so that it can be used as
+        samples to train a classifier.
+        Returns a list of arrays where each array is a signal slice of one heart beat,
+        centered around the R peak.
+        """
+        # Remove baseline drift.
+        lead1_driftless = self.remove_drift(data)
+        # Smooth the data.
+        Wn = 0.08
+        b, a = signal.butter(6, Wn, 'lowpass', analog=False)
+        lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
+        # Find location and value of R peaks.
+        rPeaksInd, rPeaksVal = self.find_r_peaks(lead1_smoothed)
+        # Cut the signal into individual heart beats centered around R peaks.
+        slices = self.cut_data_into_beats(lead1_smoothed, rPeaksInd)
+        slicesZoomed = self.zoom_to_length(slices, 100)
+        slicesScaled = self.scale_to_int(slicesZoomed, 100)
+        return slicesScaled

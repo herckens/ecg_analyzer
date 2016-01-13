@@ -1,40 +1,43 @@
 import numpy as np
-#from matplotlib import pylab as pl
 from matplotlib import pyplot as plt
-from scipy import signal
 
 from database import DataBase
 from dataconditioner import DataConditioner
 
-
-# Get data from DB file.
 prefix = "../ptbdb/"
-#patientPath = "patient001/s0014lre"
-patientPath = "patient001/s0010_re"
-db = DataBase(prefix, patientPath)
-lead1_raw = db.get_data(lead = 0)
-
+db = DataBase(prefix)
 dc = DataConditioner()
-# Remove baseline drift.
-lead1_driftless = dc.remove_drift(lead1_raw)
-# Smooth the data.
-Wn = 0.08
-b, a = signal.butter(6, Wn, 'lowpass', analog=False)
-lead1_smoothed = signal.filtfilt(b, a, lead1_driftless)
-# Find location and value of R peaks.
-rPeaksInd, rPeaksVal = dc.find_r_peaks(lead1_smoothed)
-# Cut the signal into individual heart beats centered around R peaks.
-slices = dc.cut_data_into_beats(lead1_smoothed, rPeaksInd)
-# Get diagnosis (pathologic or not).
-isPathologic = db.has_myocardial_infarction()
-print(isPathologic)
+
+dataHealthy = list()
+dataMI = list()
+with open(prefix + "RECORDS") as f:
+    for line in f:
+        patientPath = line.rstrip('\n')
+        ## Get diagnosis (pathologic or not).
+        print(patientPath)
+        diagnosis = db.get_diagnosis(patientPath)
+        if diagnosis == 'Healthy control':
+            lead1_raw = db.get_data(patientPath, lead = 0)
+            slices = dc.condition_signal(lead1_raw)
+            dataHealthy += slices
+        elif diagnosis == 'Myocardial infarction':
+            lead1_raw = db.get_data(patientPath, lead = 0)
+            slices = dc.condition_signal(lead1_raw)
+            dataMI += slices
+        else :
+            print(diagnosis)
+            continue
+
+lengths = list()
+for arr in dataHealthy:
+    lengths.append(len(arr))
+lengths = np.array(lengths)
 
 # Plot
 plt.close()
 plt.ion()
-#plt.plot(lead1_driftless)
-#plt.plot(lead1_smoothed)
-#plt.scatter(rPeaksInd, rPeaksVal)
-for sample in slices:
-    plt.plot(sample)
+for sample in dataHealthy:
+    plt.plot(sample, 'b')
+for sample in dataMI:
+    plt.plot(sample, 'r')
 plt.show()
