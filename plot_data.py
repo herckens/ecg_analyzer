@@ -7,6 +7,11 @@ import tensorflow as tf
 from database import DataBase
 from dataconditioner import DataConditioner
 
+fileTrainData = "trainData.npy"
+fileTrainLabels = "trainLabels.npy"
+fileTestData = "testData.npy"
+fileTestLabels = "testLabels.npy"
+
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
   return tf.Variable(initial)
@@ -24,67 +29,81 @@ def max_pool_2x2(x):
   return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME')
 
-# Import the ECG data.
-prefix = "../ptbdb/"
-db = DataBase(prefix)
-dc = DataConditioner()
-data = list()
-labels = list()
-with open(prefix + "RECORDS") as f:
-    for line in f:
-        patientPath = line.rstrip('\n')
-        ## Get diagnosis (pathologic or not).
-        diagnosis = db.get_diagnosis(patientPath)
-        if diagnosis == 'Healthy control':
-            lead1_raw = db.get_data(patientPath, lead = 0)
-            slices = dc.condition_signal(lead1_raw)
-            data += slices
-            for i in range(0, len(slices)):
-                labels.append([1,0])
-        elif diagnosis == 'Myocardial infarction':
-            lead1_raw = db.get_data(patientPath, lead = 0)
-            slices = dc.condition_signal(lead1_raw)
-            data += slices
-            for i in range(0, len(slices)):
-                labels.append([0,1])
-        else :
-            continue
+try :
+    # If previous data exists in files, load it.
+    trainData = np.load(fileTrainData)
+    trainLabels = np.load(fileTrainLabels)
+    testData = np.load(fileTestData)
+    testLabels = np.load(fileTestLabels)
+    print("Loaded previous data")
+except IOError:
+    # If no previous files exist, reimport the ECG data.
+    print("Reimporting data")
+    prefix = "../ptbdb/"
+    db = DataBase(prefix)
+    dc = DataConditioner()
+    data = list()
+    labels = list()
+    with open(prefix + "RECORDS") as f:
+        for line in f:
+            patientPath = line.rstrip('\n')
+            ## Get diagnosis (pathologic or not).
+            diagnosis = db.get_diagnosis(patientPath)
+            if diagnosis == 'Healthy control':
+                lead1_raw = db.get_data(patientPath, lead = 0)
+                slices = dc.condition_signal(lead1_raw)
+                data += slices
+                for i in range(0, len(slices)):
+                    labels.append([1,0])
+            elif diagnosis == 'Myocardial infarction':
+                lead1_raw = db.get_data(patientPath, lead = 0)
+                slices = dc.condition_signal(lead1_raw)
+                data += slices
+                for i in range(0, len(slices)):
+                    labels.append([0,1])
+            else :
+                continue
 
-# Separate into train and test data.
-length = len(data)
-#trainData = np.array(data[0 : int(length/2)])
-#trainLabels = np.array(labels[0 : int(length/2)])
-#testData = np.array(data[int(length/2) : int(length)])
-#testLabels = np.array(labels[int(length/2) : int(length)])
+    # Separate into train and test data.
+    length = len(data)
+    #trainData = np.array(data[0 : int(length/2)])
+    #trainLabels = np.array(labels[0 : int(length/2)])
+    #testData = np.array(data[int(length/2) : int(length)])
+    #testLabels = np.array(labels[int(length/2) : int(length)])
 
-#testData = np.array(data[0 : int(length/2)])
-#testLabels = np.array(labels[0 : int(length/2)])
-#trainData = np.array(data[int(length/2) : int(length)])
-#trainLabels = np.array(labels[int(length/2) : int(length)])
+    #testData = np.array(data[0 : int(length/2)])
+    #testLabels = np.array(labels[0 : int(length/2)])
+    #trainData = np.array(data[int(length/2) : int(length)])
+    #trainLabels = np.array(labels[int(length/2) : int(length)])
 
-# Select random samples for train and test datasets.
-trainIndices = set()
-testIndices = set()
-allIndices = set(range(0, length))
-trainData = list()
-trainLabels = list()
-testData = list()
-testLabels = list()
-while len(trainIndices) < int(length / 2):
-    index = random.randint(0, length-1)
-    if index not in trainIndices:
-        trainIndices.add(index)
-testIndices = allIndices.difference(trainIndices)
-for i in trainIndices:
-    trainData.append(data[i])
-    trainLabels.append(labels[i])
-for i in testIndices:
-    testData.append(data[i])
-    testLabels.append(labels[i])
-trainData = np.array(trainData)
-trainLabels = np.array(trainLabels)
-testData = np.array(testData)
-testLabels = np.array(testLabels)
+    # Select random samples for train and test datasets.
+    trainIndices = set()
+    testIndices = set()
+    allIndices = set(range(0, length))
+    trainData = list()
+    trainLabels = list()
+    testData = list()
+    testLabels = list()
+    while len(trainIndices) < int(length / 2):
+        index = random.randint(0, length-1)
+        if index not in trainIndices:
+            trainIndices.add(index)
+    testIndices = allIndices.difference(trainIndices)
+    for i in trainIndices:
+        trainData.append(data[i])
+        trainLabels.append(labels[i])
+    for i in testIndices:
+        testData.append(data[i])
+        testLabels.append(labels[i])
+    trainData = np.array(trainData)
+    trainLabels = np.array(trainLabels)
+    testData = np.array(testData)
+    testLabels = np.array(testLabels)
+
+    np.save(fileTrainData, trainData)
+    np.save(fileTrainLabels, trainLabels)
+    np.save(fileTestData, testData)
+    np.save(fileTestLabels, testLabels)
 
 # Start the session.
 sess = tf.InteractiveSession()
