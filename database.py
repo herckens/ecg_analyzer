@@ -2,15 +2,6 @@ import numpy as np
 import linecache
 
 class DataBase:
-    """
-    Small routine dedicated to physionet measurements readings from ptbdb database
-    Database and informations available here : http://physionet.org/physiobank/database/ptbdb/
-    """
-    __author__ =    "ThePolyscope"
-    __email__ =     "ThePolyscope@ThePolyscope.com"
-    __version__ =   "1.0.0"
-    __copyright__ = "Copyright 2015, ThePolyscope.com"
-    __license__ =   "MIT License"
 
     def __init__(self, prefix):
         self.prefix = prefix
@@ -22,6 +13,15 @@ class DataBase:
             Return a numpy.array containing all 12 arrays with the signals.
         If lead is an integer between 0 and 11
             Return one numpy.array with the signal of specified lead.
+
+        This work is based on:
+        Small routine dedicated to physionet measurements readings from ptbdb database
+        Database and informations available here : http://physionet.org/physiobank/database/ptbdb/
+        __author__ =    "ThePolyscope"
+        __email__ =     "ThePolyscope@ThePolyscope.com"
+        __version__ =   "1.0.0"
+        __copyright__ = "Copyright 2015, ThePolyscope.com"
+        __license__ =   "MIT License"
         """
         # Open header file in read mode
         headerFile = open(self.prefix + patientPath + ".hea","r")
