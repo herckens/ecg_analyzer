@@ -7,47 +7,25 @@ import tensorflow as tf
 from database import DataBase
 from dataconditioner import DataConditioner
 
+prefix = "../ptbdb/"
+
+fileTrainRecords = "RECORDS_TRAIN"
+fileTestRecords = "RECORDS_TEST"
+
 fileTrainData = "trainData.npy"
 fileTrainLabels = "trainLabels.npy"
 fileTestData = "testData.npy"
 fileTestLabels = "testLabels.npy"
 
-def weight_variable(shape):
-  initial = tf.truncated_normal(shape, stddev=0.1)
-  return tf.Variable(initial)
-
-def bias_variable(shape):
-  initial = tf.constant(0.1, shape=shape)
-  return tf.Variable(initial)
-
-# Convolution with stride of 1 and padding of 0.
-def conv2d(x, W):
-  return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-
-# Pooling with max pooling over 2x2 blocks.
-def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                        strides=[1, 2, 2, 1], padding='SAME')
-
-try :
-    # If previous data exists in files, load it.
-    trainData = np.load(fileTrainData)
-    trainLabels = np.load(fileTrainLabels)
-    testData = np.load(fileTestData)
-    testLabels = np.load(fileTestLabels)
-    print("Loaded previous data")
-except IOError:
-    # If no previous files exist, reimport the ECG data.
-    print("Reimporting data")
-    prefix = "../ptbdb/"
+def import_dataset(recordsFile):
     db = DataBase(prefix)
     dc = DataConditioner()
     data = list()
     labels = list()
-    with open(prefix + "RECORDS") as f:
+    with open(prefix + recordsFile) as f:
         for line in f:
             patientPath = line.rstrip('\n')
-            ## Get diagnosis (pathologic or not).
+            print(patientPath)
             diagnosis = db.get_diagnosis(patientPath)
             if diagnosis == 'Healthy control':
                 lead1_raw = db.get_data(patientPath, lead = 0)
@@ -63,42 +41,29 @@ except IOError:
                     labels.append([0,1])
             else :
                 continue
-
-    # Separate into train and test data.
+    # Shuffle the data.
     length = len(data)
-    #trainData = np.array(data[0 : int(length/2)])
-    #trainLabels = np.array(labels[0 : int(length/2)])
-    #testData = np.array(data[int(length/2) : int(length)])
-    #testLabels = np.array(labels[int(length/2) : int(length)])
+    indices = list(range(0, length))
+    random.shuffle(indices)
+    dataShuffled = list()
+    labelsShuffled = list()
+    for i in indices:
+        dataShuffled.append(data[i])
+        labelsShuffled.append(labels[i])
+    return dataShuffled, labelsShuffled
 
-    #testData = np.array(data[0 : int(length/2)])
-    #testLabels = np.array(labels[0 : int(length/2)])
-    #trainData = np.array(data[int(length/2) : int(length)])
-    #trainLabels = np.array(labels[int(length/2) : int(length)])
-
-    # Select random samples for train and test datasets.
-    trainIndices = set()
-    testIndices = set()
-    allIndices = set(range(0, length))
-    trainData = list()
-    trainLabels = list()
-    testData = list()
-    testLabels = list()
-    while len(trainIndices) < int(length / 2):
-        index = random.randint(0, length-1)
-        if index not in trainIndices:
-            trainIndices.add(index)
-    testIndices = allIndices.difference(trainIndices)
-    for i in trainIndices:
-        trainData.append(data[i])
-        trainLabels.append(labels[i])
-    for i in testIndices:
-        testData.append(data[i])
-        testLabels.append(labels[i])
-    trainData = np.array(trainData)
-    trainLabels = np.array(trainLabels)
-    testData = np.array(testData)
-    testLabels = np.array(testLabels)
+try :
+    # If previous data exists in files, load it.
+    trainData = np.load(fileTrainData)
+    trainLabels = np.load(fileTrainLabels)
+    testData = np.load(fileTestData)
+    testLabels = np.load(fileTestLabels)
+    print("Loaded previous data")
+except IOError:
+    # If no previous files exist, reimport the ECG data.
+    print("Reimporting data")
+    trainData, trainLabels = import_dataset(fileTrainRecords)
+    testData, testLabels = import_dataset(fileTestRecords)
 
     np.save(fileTrainData, trainData)
     np.save(fileTrainLabels, trainLabels)
@@ -126,19 +91,33 @@ train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 sess.run(tf.initialize_all_variables())
 
 # Train.
-for i in range(5000):
-    train_step.run(feed_dict = {x: trainData, y_: trainLabels})
+#for i in range(2):
+#    train_step.run(feed_dict = {x: trainData, y_: trainLabels})
+
+#half = int(len(trainData)/2)
+#train_step.run(feed_dict = {x: trainData[0:half], y_: trainLabels[0:half]})
+#train_step.run(feed_dict = {x: trainData[half+1:], y_: trainLabels[half+1:]})
+#train_step.run(feed_dict = {x: trainData[0:i], y_: trainLabels[0:i]})
+train_step.run(feed_dict = {x: trainData, y_: trainLabels})
+#train_step.run(feed_dict = {x: trainData[1:2], y_: trainLabels[1:2]})
+valueW = sess.run(W)
+print(valueW)
+valueB = sess.run(b)
+print(valueB)
 
 # Evaluate.
 correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-print(sess.run(accuracy, feed_dict={x: testData, y_: testLabels}))
+#print("i = {}, accuracy = {}".format(i, sess.run(accuracy, feed_dict={x: testData, y_: testLabels})))
+print("accuracy = {}".format(sess.run(accuracy, feed_dict={x: testData, y_: testLabels})))
+
+sess.close()
 
 ## Plot
-#plt.close()
-#plt.ion()
-#for sample in trainData:
-#    plt.plot(sample, 'b')
+plt.close()
+plt.ion()
+for sample in trainData[0:3]:
+    plt.plot(sample)
 #for sample in testData:
 #    plt.plot(sample, 'r')
-#plt.show()
+plt.show()
