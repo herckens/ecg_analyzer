@@ -40,18 +40,15 @@ accuracyTrain = list()
 accuracyTest = list()
 
 # Train.
-count = 0
 #print("{}: Start training.".format(time.time()))
 for i in range(2500):
     batchXs, batchYs = trainData.next_batch(400)
     trainStep.run(feed_dict = {x: batchXs, y_: batchYs})
-    if count == 50:
+    if i%50 == 0:
         batchXs, batchYs = trainData.next_batch(5000)
         accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
         batchXs, batchYs = testData.next_batch(5000)
         accuracyTest.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
-        count = 0
-    count += 1
 valueW = sess.run(W)
 print(valueW)
 valueB = sess.run(b)
