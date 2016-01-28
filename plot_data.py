@@ -26,13 +26,12 @@ y = tf.nn.softmax(tf.matmul(x, W) + b)
 #y = tf.nn.softmax(tf.matmul(x, W))
 
 # Define the cost function and training step.
-#TODO cosmetics: follow naming convention
-cross_entropy = -tf.reduce_sum(y_*tf.log(y))
-train_step = tf.train.GradientDescentOptimizer(0.001).minimize(cross_entropy)
+crossEntropy = -tf.reduce_sum(y_*tf.log(y))
+trainStep = tf.train.GradientDescentOptimizer(0.001).minimize(crossEntropy)
 
 # Define the evaluation function.
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+correctPrediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+accuracy = tf.reduce_mean(tf.cast(correctPrediction, "float"))
 
 sess.run(tf.initialize_all_variables())
 accuracyTrain = list()
@@ -41,7 +40,7 @@ accuracyTest = list()
 # Train.
 for i in range(500):
     batchXs, batchYs = trainData.next_batch(100)
-    train_step.run(feed_dict = {x: batchXs, y_: batchYs})
+    trainStep.run(feed_dict = {x: batchXs, y_: batchYs})
     accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
     accuracyTest.append(sess.run(accuracy, feed_dict={x: testData.data, y_: testData.labels}))
 valueW = sess.run(W)
