@@ -61,11 +61,19 @@ print("Sensitivity (MI) =      {}".format(sess.run(accuracy, feed_dict={x: testD
 
 sess.close()
 
+w0 = list()
+w1 = list()
+for elem in valueW:
+    w0.append(elem[0])
+    w1.append(elem[1])
+
 ## Plot
 plt.close()
 plt.ion()
-plt.plot(accuracyTrain, 'b')
-plt.plot(accuracyTest, 'r')
+#plt.plot(accuracyTrain, 'b')
+#plt.plot(accuracyTest, 'r')
+plt.plot(w0, 'b')
+plt.plot(w1, 'r')
 #for sample in trainData[0:3]:
 #    plt.plot(sample)
 #for sample in testData:
