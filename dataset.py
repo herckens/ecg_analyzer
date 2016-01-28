@@ -125,12 +125,6 @@ class DataSet:
             # If no previous files exist, reimport the ECG data.
             print(self._name + ": Reimporting data.")
             data = self.import_dataset()
-            #self._data = np.array(data[0])
-            #self._labels = np.array(data[1])
-            #self._dataHealthy = np.array(data[2])
-            #self._labelsHealthy = np.array(data[3])
-            #self._dataMI = np.array(data[4])
-            #self._labelsMI = np.array(data[5])
             np.save(self._fileData, self._data)
             np.save(self._fileLabels, self._labels)
             np.save(self._fileDataHealthy, self._dataHealthy)
