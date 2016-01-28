@@ -2,11 +2,13 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import tensorflow as tf
+import time
 
 from dataset import DataSet
 
 prefix = "../ptbdb/"
 
+# Load the train and test datasets.
 trainData = DataSet("train", prefix)
 testData = DataSet("test", prefix)
 
@@ -38,17 +40,24 @@ accuracyTrain = list()
 accuracyTest = list()
 
 # Train.
-for i in range(500):
-    batchXs, batchYs = trainData.next_batch(100)
+count = 0
+#print("{}: Start training.".format(time.time()))
+for i in range(2500):
+    batchXs, batchYs = trainData.next_batch(400)
     trainStep.run(feed_dict = {x: batchXs, y_: batchYs})
-    accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
-    accuracyTest.append(sess.run(accuracy, feed_dict={x: testData.data, y_: testData.labels}))
+    if count == 50:
+        batchXs, batchYs = trainData.next_batch(5000)
+        accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
+        batchXs, batchYs = testData.next_batch(5000)
+        accuracyTest.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
+        count = 0
+    count += 1
 valueW = sess.run(W)
 print(valueW)
 valueB = sess.run(b)
 print(valueB)
 
-batchXs, batchYs = trainData.next_batch(1000)
+batchXs, batchYs = testData.next_batch(5000)
 print("Accuracy (all) =        {}".format(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs})))
 print("Specificity (healthy) = {}".format(sess.run(accuracy, feed_dict={x: testData.dataHealthy, y_: testData.labelsHealthy})))
 print("Sensitivity (MI) =      {}".format(sess.run(accuracy, feed_dict={x: testData.dataMI, y_: testData.labelsMI})))
