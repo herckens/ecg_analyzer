@@ -17,6 +17,12 @@ class DataSet:
         self.load_data()
 
     @property
+    def name(self):
+        return self._name
+    @property
+    def prefix(self):
+        return self._prefix
+    @property
     def recordsFile(self):
         return self._recordsFile
     @property
@@ -68,7 +74,7 @@ class DataSet:
         return dataShuffled, labelsShuffled
 
     def import_dataset(self):
-        db = DataBase(prefix)
+        db = DataBase(self._prefix)
         dc = DataConditioner()
         data = list()
         labels = list()
@@ -76,7 +82,7 @@ class DataSet:
         labelsHealthy = list()
         dataMI = list()
         labelsMI = list()
-        with open(prefix + recordsFile) as f:
+        with open(self._prefix + self._recordsFile) as f:
             for line in f:
                 patientPath = line.rstrip('\n')
                 print(patientPath)
@@ -100,9 +106,9 @@ class DataSet:
                 else :
                     continue
         # Shuffle the data.
-        self._data, self._labels= shuffle_data(data, labels)
-        self._dataHealthy, self._labelsHealthy= shuffle_data(dataHealthy, labelsHealthy)
-        self._dataMI, self._labelsMI= shuffle_data(dataMI, labelsMI)
+        self._data, self._labels = self.shuffle_data(data, labels)
+        self._dataHealthy, self._labelsHealthy = self.shuffle_data(dataHealthy, labelsHealthy)
+        self._dataMI, self._labelsMI = self.shuffle_data(dataMI, labelsMI)
 
     def load_data(self):
         try :
@@ -118,13 +124,13 @@ class DataSet:
         except IOError:
             # If no previous files exist, reimport the ECG data.
             print(self._name + ": Reimporting data.")
-            data = self.import_dataset(self._recordsFile)
-            self._data = np.array(data[0])
-            self._labels = np.array(data[1])
-            self._dataHealthy = np.array(data[2])
-            self._labelsHealthy = np.array(data[3])
-            self._dataMI = np.array(data[4])
-            self._labelsMI = np.array(data[5])
+            data = self.import_dataset()
+            #self._data = np.array(data[0])
+            #self._labels = np.array(data[1])
+            #self._dataHealthy = np.array(data[2])
+            #self._labelsHealthy = np.array(data[3])
+            #self._dataMI = np.array(data[4])
+            #self._labelsMI = np.array(data[5])
             np.save(self._fileData, self._data)
             np.save(self._fileLabels, self._labels)
             np.save(self._fileDataHealthy, self._dataHealthy)
