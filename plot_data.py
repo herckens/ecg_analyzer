@@ -36,7 +36,8 @@ y = tf.nn.softmax(tf.matmul(hidden, wOut) + bOut)
 
 # Define the cost function and training step.
 crossEntropy = -tf.reduce_sum(y_*tf.log(y))
-trainStep = tf.train.GradientDescentOptimizer(0.0001).minimize(crossEntropy)
+learningRate = 0.0001
+trainStep = tf.train.GradientDescentOptimizer(learningRate).minimize(crossEntropy)
 
 # Define the evaluation function.
 correctPrediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
@@ -47,8 +48,9 @@ accuracyTrain = list()
 accuracyTest = list()
 
 # Train.
-print("{}: Start training.".format(time.time()))
-for i in range(4500):
+start = time.time()
+print("{}: Start training.".format(start))
+for i in range(10000):
     batchXs, batchYs = trainData.next_batch(256)
     trainStep.run(feed_dict = {x: batchXs, y_: batchYs})
     if i%100 == 0:
@@ -56,11 +58,16 @@ for i in range(4500):
         accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
         batchXs, batchYs = testData.next_batch(4096)
         accuracyTest.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
+        # Decay learning rate over time.
+        learningRate *= 0.99
+        trainStep = tf.train.GradientDescentOptimizer(learningRate).minimize(crossEntropy)
+end = time.time()
+print("{}: Stop training.".format(end))
 valueW = sess.run(wOut)
 print(valueW)
 valueB = sess.run(bOut)
 print(valueB)
-print("{}: Stop training.".format(time.time()))
+print("Time for training = {}".format(end - start))
 
 batchXs, batchYs = testData.next_batch(5000)
 print("Accuracy (all) =        {}".format(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs})))
