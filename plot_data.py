@@ -36,8 +36,8 @@ y = tf.nn.softmax(tf.matmul(hidden, wOut) + bOut)
 
 # Define the cost function and training step.
 crossEntropy = -tf.reduce_sum(y_*tf.log(y))
-learningRate = 0.0001
-trainStep = tf.train.GradientDescentOptimizer(learningRate).minimize(crossEntropy)
+learningRate = 0.00003
+trainStep = tf.train.AdamOptimizer(learningRate).minimize(crossEntropy)
 
 # Define the evaluation function.
 correctPrediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
@@ -58,9 +58,9 @@ for i in range(10000):
         accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
         batchXs, batchYs = testData.next_batch(4096)
         accuracyTest.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
-        # Decay learning rate over time.
-        learningRate *= 0.99
-        trainStep = tf.train.GradientDescentOptimizer(learningRate).minimize(crossEntropy)
+        # Decay learning rate over time. Doesn't work with AdamOptimizer...
+        #learningRate *= 0.99
+        #trainStep = tf.train.AdamOptimizer(learningRate).minimize(crossEntropy)
 end = time.time()
 print("{}: Stop training.".format(end))
 valueW = sess.run(wOut)
