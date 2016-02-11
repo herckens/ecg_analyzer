@@ -6,7 +6,11 @@ import time
 
 from dataset import DataSet
 
+def init_weights(shape):
+    return tf.Variable(tf.random_normal(shape, stddev=0.01, dtype=tf.float32))
+
 prefix = "../ptbdb/"
+numHidden = 300
 
 # Load the train and test datasets.
 trainData = DataSet("train", prefix)
@@ -22,14 +26,17 @@ x = tf.placeholder(tf.float32, [None, 100])
 y_ = tf.placeholder(tf.float32, [None, 2])
 
 # Define the model.
-W = tf.Variable(tf.zeros([100, 2]))
-b = tf.Variable(tf.zeros([2]))
-y = tf.nn.softmax(tf.matmul(x, W) + b)
-#y = tf.nn.softmax(tf.matmul(x, W))
+wHidden = init_weights([100,numHidden])
+bHidden = tf.Variable(tf.zeros([numHidden]))
+hidden = tf.nn.tanh(tf.matmul(x,wHidden) + bHidden)
+wOut = tf.Variable(tf.zeros([numHidden, 2]))
+bOut = tf.Variable(tf.zeros([2]))
+y = tf.nn.softmax(tf.matmul(hidden, wOut) + bOut)
+#y = tf.nn.softmax(tf.matmul(x, w))
 
 # Define the cost function and training step.
 crossEntropy = -tf.reduce_sum(y_*tf.log(y))
-trainStep = tf.train.GradientDescentOptimizer(0.001).minimize(crossEntropy)
+trainStep = tf.train.GradientDescentOptimizer(0.0001).minimize(crossEntropy)
 
 # Define the evaluation function.
 correctPrediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
@@ -40,19 +47,20 @@ accuracyTrain = list()
 accuracyTest = list()
 
 # Train.
-#print("{}: Start training.".format(time.time()))
-for i in range(2500):
-    batchXs, batchYs = trainData.next_batch(400)
+print("{}: Start training.".format(time.time()))
+for i in range(4500):
+    batchXs, batchYs = trainData.next_batch(256)
     trainStep.run(feed_dict = {x: batchXs, y_: batchYs})
-    if i%50 == 0:
-        batchXs, batchYs = trainData.next_batch(5000)
+    if i%100 == 0:
+        batchXs, batchYs = trainData.next_batch(4096)
         accuracyTrain.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
-        batchXs, batchYs = testData.next_batch(5000)
+        batchXs, batchYs = testData.next_batch(4096)
         accuracyTest.append(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs}))
-valueW = sess.run(W)
+valueW = sess.run(wOut)
 print(valueW)
-valueB = sess.run(b)
+valueB = sess.run(bOut)
 print(valueB)
+print("{}: Stop training.".format(time.time()))
 
 batchXs, batchYs = testData.next_batch(5000)
 print("Accuracy (all) =        {}".format(sess.run(accuracy, feed_dict={x: batchXs, y_: batchYs})))
@@ -67,11 +75,15 @@ for elem in valueW:
     w0.append(elem[0])
     w1.append(elem[1])
 
-## Plot
+# Plot
 plt.close()
 plt.ion()
-#plt.plot(accuracyTrain, 'b')
-#plt.plot(accuracyTest, 'r')
+plt.figure(1)
+plt.subplot(211)
+plt.plot(accuracyTrain, 'b', label = 'Train')
+plt.plot(accuracyTest, 'r', label = 'Test')
+plt.legend()
+plt.subplot(212)
 plt.plot(w0, 'b')
 plt.plot(w1, 'r')
 #for sample in trainData[0:3]:
