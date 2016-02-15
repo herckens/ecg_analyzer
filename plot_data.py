@@ -10,7 +10,8 @@ def init_weights(shape):
     return tf.Variable(tf.random_normal(shape, stddev=0.01, dtype=tf.float32))
 
 prefix = "../ptbdb/"
-numHidden = 300
+numHidden1 = 100
+numHidden2 = 100
 
 # Load the train and test datasets.
 trainData = DataSet("train", prefix)
@@ -26,12 +27,15 @@ x = tf.placeholder(tf.float32, [None, 100])
 y_ = tf.placeholder(tf.float32, [None, 2])
 
 # Define the model.
-wHidden = init_weights([100,numHidden])
-bHidden = tf.Variable(tf.zeros([numHidden]))
-hidden = tf.nn.tanh(tf.matmul(x,wHidden) + bHidden)
-wOut = tf.Variable(tf.zeros([numHidden, 2]))
+wHidden1 = init_weights([100,numHidden1])
+bHidden1 = tf.Variable(tf.zeros([numHidden1]))
+hidden1 = tf.nn.tanh(tf.matmul(x,wHidden1) + bHidden1)
+wHidden2 = init_weights([numHidden1,numHidden2])
+bHidden2 = tf.Variable(tf.zeros([numHidden2]))
+hidden2 = tf.nn.tanh(tf.matmul(hidden1,wHidden2) + bHidden2)
+wOut = tf.Variable(tf.zeros([numHidden2, 2]))
 bOut = tf.Variable(tf.zeros([2]))
-y = tf.nn.softmax(tf.matmul(hidden, wOut) + bOut)
+y = tf.nn.softmax(tf.matmul(hidden2, wOut) + bOut)
 #y = tf.nn.softmax(tf.matmul(x, w))
 
 # Define the cost function and training step.
